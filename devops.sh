@@ -23,7 +23,7 @@ while true; do
   echo "=========================================="
   echo "OS: ${OS_NAME} ${OS_VERSION}"
   echo
-  echo "1) Create DevOps user + SSH key"
+  echo "1) GitHub SSH setup (generate key + test)"
   echo "2) System update & upgrade"
   echo "3) Install Docker + Compose plugin"
   echo "4) Install PHP (choose version)"
