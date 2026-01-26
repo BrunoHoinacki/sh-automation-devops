@@ -19,8 +19,13 @@ detect_os() {
   if [[ -f /etc/os-release ]]; then
     # shellcheck disable=SC1091
     source /etc/os-release
-    OS_NAME="${NAME:-unknown}"
+
+    # ID costuma ser "ubuntu" / "debian" (ótimo pra lógica)
+    OS_NAME="${ID:-${NAME:-unknown}}"
     OS_VERSION="${VERSION_ID:-unknown}"
+
+    # normaliza pra minúsculo (evita esses bugs pra sempre)
+    OS_NAME="$(echo "${OS_NAME}" | tr '[:upper:]' '[:lower:]')"
   fi
 }
 

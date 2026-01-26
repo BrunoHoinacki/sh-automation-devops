@@ -13,8 +13,10 @@ echo "Examples: 8.2, 8.3, 8.4"
 read -rp "PHP version [8.4]: " PHPV
 PHPV="${PHPV:-8.4}"
 
-if [[ "${OS_NAME}" != "ubuntu" && "${OS_NAME}" != "debian" ]]; then
-  echo "❌ Unsupported OS for this module: ${OS_NAME}"
+OS_NAME_LC="$(echo "${OS_NAME:-}" | tr '[:upper:]' '[:lower:]')"
+
+if [[ "${OS_NAME_LC}" != "ubuntu" && "${OS_NAME_LC}" != "debian" ]]; then
+  echo "❌ Unsupported OS for this module: ${OS_NAME} (${OS_NAME_LC})"
   exit 1
 fi
 
