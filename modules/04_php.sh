@@ -13,43 +13,52 @@ echo "Examples: 8.2, 8.3, 8.4"
 read -rp "PHP version [8.4]: " PHPV
 PHPV="${PHPV:-8.4}"
 
-OS_NAME_LC="$(echo "${OS_NAME:-}" | tr '[:upper:]' '[:lower:]')"
-
-if [[ "${OS_NAME_LC}" != "ubuntu" && "${OS_NAME_LC}" != "debian" ]]; then
-  echo "❌ Unsupported OS for this module: ${OS_NAME} (${OS_NAME_LC})"
+if [[ "${OS_NAME}" != "ubuntu" && "${OS_NAME}" != "debian" ]]; then
+  echo "ERROR: Unsupported OS for this module: ${OS_NAME}"
   exit 1
 fi
 
-echo "==> Removing old PHP/Composer from apt (safe cleanup)..."
+echo "==> Removing old PHP/Composer (apt)..."
 
-# Para serviços se existirem (não explode se não existir)
+# Stop FPM services if present
 systemctl stop php8.0-fpm php8.1-fpm php8.2-fpm php8.3-fpm php8.4-fpm 2>/dev/null || true
 
-# Remove pacotes PHP instalados via apt (todas versões) + composer do apt
-apt-get remove -y --purge \
-  'php*' 'libapache2-mod-php*' 'php*-*' composer || true
-
+# Remove PHP packages (all versions) and apt Composer, if installed
+apt-get remove -y --purge 'php*' 'libapache2-mod-php*' 'php*-*' composer 2>/dev/null || true
 apt-get autoremove -y --purge || true
 apt-get autoclean -y || true
 
+# If a previous run added Sury on Ubuntu, remove it (Sury is for Debian here)
+if [[ "${OS_NAME}" == "ubuntu" ]]; then
+  rm -f /etc/apt/sources.list.d/sury-php.list || true
+  rm -f /etc/apt/keyrings/sury-php.gpg || true
+fi
+
 echo "==> Installing repo prerequisites..."
-apt_install ca-certificates curl gnupg lsb-release apt-transport-https
+apt_install software-properties-common ca-certificates curl gnupg lsb-release apt-transport-https
 
-# Repo Sury (packages.sury.org) - recomendado pra múltiplas versões PHP no Debian/Ubuntu
-echo "==> Adding Sury PHP repository..."
-install -d -m 0755 /etc/apt/keyrings
+echo "==> Adding PHP repository..."
 
-curl -fsSL https://packages.sury.org/php/apt.gpg \
-  | gpg --dearmor -o /etc/apt/keyrings/sury-php.gpg
+if [[ "${OS_NAME}" == "ubuntu" ]]; then
+  # Ubuntu: use Ondrej PPA for multiple PHP versions (incl. 8.4)
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+  apt-get update -y
 
-# Ubuntu noble / Debian bookworm etc
-CODENAME="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
-echo "deb [signed-by=/etc/apt/keyrings/sury-php.gpg] https://packages.sury.org/php/ ${CODENAME} main" \
-  > /etc/apt/sources.list.d/sury-php.list
+elif [[ "${OS_NAME}" == "debian" ]]; then
+  # Debian: use Sury repository
+  install -d -m 0755 /etc/apt/keyrings
 
-apt-get update -y
+  curl -fsSL https://packages.sury.org/php/apt.gpg \
+    | gpg --dearmor -o /etc/apt/keyrings/sury-php.gpg
 
-echo "==> Installing PHP ${PHPV} + common extensions (CLI/FPM/XML/DOM/SimpleXML etc)..."
+  CODENAME="$(. /etc/os-release && echo "${VERSION_CODENAME}")"
+  echo "deb [signed-by=/etc/apt/keyrings/sury-php.gpg] https://packages.sury.org/php/ ${CODENAME} main" \
+    > /etc/apt/sources.list.d/sury-php.list
+
+  apt-get update -y
+fi
+
+echo "==> Installing PHP ${PHPV} + extensions..."
 apt-get install -y \
   "php${PHPV}" \
   "php${PHPV}-cli" \
@@ -65,12 +74,14 @@ apt-get install -y \
   "php${PHPV}-intl" \
   unzip
 
-echo "==> Setting PHP ${PHPV} as default (cli tools)..."
-update-alternatives --set php "/usr/bin/php${PHPV}" || true
-update-alternatives --set phar "/usr/bin/phar${PHPV}" || true
-update-alternatives --set phar.phar "/usr/bin/phar.phar${PHPV}" || true
+echo "==> Setting PHP ${PHPV} as default..."
+update-alternatives --set php "/usr/bin/php${PHPV}" 2>/dev/null || true
+update-alternatives --set phar "/usr/bin/phar${PHPV}" 2>/dev/null || true
+update-alternatives --set phar.phar "/usr/bin/phar.phar${PHPV}" 2>/dev/null || true
 
+echo
 php -v | head -n 2 || true
+echo
 php -m | egrep -i 'dom|xml|simplexml|mbstring|curl|zip|intl' || true
 
-echo "✅ PHP ${PHPV} installed + extensions ok."
+echo "✅ PHP ${PHPV} installed and ready."
