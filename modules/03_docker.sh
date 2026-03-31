@@ -39,3 +39,5 @@ systemctl start docker
 echo "✅ Docker installed."
 docker --version || true
 docker compose version || true
+echo
+echo "If you added a user to the 'docker' group, start a new login session before using Docker without sudo."

@@ -23,26 +23,28 @@ while true; do
   echo "=========================================="
   echo "OS: ${OS_NAME} ${OS_VERSION}"
   echo
-  echo "1) GitHub SSH setup (generate key + test)"
-  echo "2) System update & upgrade"
-  echo "3) Install Docker + Compose plugin"
-  echo "4) Install PHP (choose version)"
-  echo "5) Install Composer"
-  echo "6) Install Node.js + NPM (choose version)"
-  echo "7) Check open ports + close with UFW"
+  echo "1) Create/update DevOps user (sudo + docker)"
+  echo "2) GitHub SSH setup (generate key + test)"
+  echo "3) System update & upgrade"
+  echo "4) Install Docker + Compose plugin"
+  echo "5) Install PHP (choose version)"
+  echo "6) Install Composer"
+  echo "7) Install Node.js + NPM (choose version)"
+  echo "8) Check open ports + close with UFW"
   echo "0) Exit"
   echo
 
   read -rp "Choice: " choice
 
   case "${choice}" in
-    1) run_module "01_ssh_user.sh"; pause ;;
-    2) run_module "02_system_update.sh"; pause ;;
-    3) run_module "03_docker.sh"; pause ;;
-    4) run_module "04_php.sh"; pause ;;
-    5) run_module "05_composer.sh"; pause ;;
-    6) run_module "06_node.sh"; pause ;;
-    7) run_module "07_ports.sh"; pause ;;
+    1) run_module "00_user_devops.sh"; pause ;;
+    2) run_module "01_ssh_user.sh"; pause ;;
+    3) run_module "02_system_update.sh"; pause ;;
+    4) run_module "03_docker.sh"; pause ;;
+    5) run_module "04_php.sh"; pause ;;
+    6) run_module "05_composer.sh"; pause ;;
+    7) run_module "06_node.sh"; pause ;;
+    8) run_module "07_ports.sh"; pause ;;
     0) exit 0 ;;
     *) echo "Invalid option"; pause ;;
   esac

@@ -2,10 +2,11 @@
 
 A modular, menu-driven toolbox to bootstrap and maintain **Ubuntu/Debian VPS** environments.
 
-This toolbox is designed to be used **after your DevOps user already exists** (for example `devops`).  
-You log in as that user, run the toolbox with `sudo`, and install or manage infrastructure components **on demand**.
+This toolbox can prepare the base user for you.
+You can start as `root`, create the `devops` user, install Docker and the rest of the stack, then log in as that user and continue the setup.
 
 Main features:
+- Create/update a `devops` user with `sudo` and `docker` group access
 - GitHub SSH key setup (generate + pause + test)
 - System updates
 - Docker & Docker Compose
@@ -18,51 +19,49 @@ Main features:
 
 ## Repository Structure
 
-```
-
+```text
 sh-automation-devops/
 ├── install.sh              # One-line installer (curl | bash)
 ├── devops.sh               # Interactive menu
 ├── lib/
 │   └── common.sh           # Shared helpers
 └── modules/
-├── 01_ssh_user.sh      # GitHub SSH setup (no user creation)
-├── 02_system_update.sh
-├── 03_docker.sh
-├── 04_php.sh
-├── 05_composer.sh
-├── 06_node.sh
-└── 07_ports.sh
-
-````
+    ├── 00_user_devops.sh   # Create/update devops user and add sudo/docker groups
+    ├── 01_ssh_user.sh      # GitHub SSH setup
+    ├── 02_system_update.sh
+    ├── 03_docker.sh
+    ├── 04_php.sh
+    ├── 05_composer.sh
+    ├── 06_node.sh
+    └── 07_ports.sh
+```
 
 ---
 
 ## Requirements
 
 - Ubuntu or Debian VPS
-- Existing Linux user (recommended: `devops`)
-- `sudo` privileges
+- Root access or a user with `sudo`
 - Internet access
 
 ---
 
 ## Quick Start (Recommended)
 
-### 🚀 One-liner install (curl | bash)
+### One-liner install (curl | bash)
 
 Downloads the toolbox **into the current directory**, prepares permissions, and opens the menu.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/BrunoHoinacki/sh-automation-devops/main/install.sh | bash
-````
+```
 
 What this does:
 
-* Downloads the repository
-* Extracts it **where you are**
-* Makes scripts executable
-* Starts the toolbox menu automatically
+- Downloads the repository
+- Extracts it **where you are**
+- Makes scripts executable
+- Starts the toolbox menu automatically
 
 ---
 
@@ -81,16 +80,18 @@ sudo ./devops.sh
 
 You usually:
 
-1. SSH into your VPS as `devops`
+1. SSH into your VPS as `root` on the first access
 2. Go to any folder you like (`~`, `/srv`, `/tools`, etc.)
 3. Run the installer
-4. Use the interactive menu whenever needed
+4. Create/update the `devops` user from the menu
+5. Install Docker and the rest of the stack
+6. Log in as `devops` and continue your normal workflow
 
 Example:
 
 ```bash
-ssh devops@your-server
-mkdir ~/tools && cd ~/tools
+ssh root@your-server
+mkdir -p /root/tools && cd /root/tools
 curl -fsSL https://raw.githubusercontent.com/BrunoHoinacki/sh-automation-devops/main/install.sh | bash
 ```
 
@@ -98,114 +99,136 @@ curl -fsSL https://raw.githubusercontent.com/BrunoHoinacki/sh-automation-devops/
 
 ## Toolbox Menu Overview
 
-### 1) GitHub SSH setup (generate key + test)
+### 1) Create/update DevOps user (sudo + docker)
 
-* Generates an **ed25519 SSH key** for the current Linux user
-* Prints the **public key** to copy into GitHub
-* **Pauses execution** so you can add the key to GitHub
-* After pressing ENTER, tests authentication with:
+- Creates the Linux user (default: `devops`) if it does not exist
+- Adds the user to `sudo`
+- Adds the user to `docker`
+- Creates the `docker` group if Docker has not been installed yet
+- Can also be used later to re-apply group membership
+
+This is the best first step on a fresh VPS.
+
+---
+
+### 2) GitHub SSH setup (generate key + test)
+
+- Generates an **ed25519 SSH key** for an existing Linux user
+- Prints the **public key** to copy into GitHub
+- **Pauses execution** so you can add the key to GitHub
+- After pressing ENTER, tests authentication with:
 
 ```bash
 ssh -T git@github.com
 ```
 
-* Does **not** create or modify users
-
-This module is ideal for quickly preparing a VPS to work with GitHub repositories.
+This module is ideal for preparing the server to work with GitHub repositories.
 
 ---
 
-### 2) System update & upgrade
+### 3) System update & upgrade
 
 Runs:
 
-* `apt update`
-* `apt upgrade`
-* `apt autoremove`
-* `apt autoclean`
+- `apt update`
+- `apt upgrade`
+- `apt autoremove`
+- `apt autoclean`
 
 ---
 
-### 3) Install Docker + Compose plugin
+### 4) Install Docker + Compose plugin
 
 Installs:
 
-* Docker CE
-* Docker Buildx
-* Docker Compose plugin (`docker compose`)
+- Docker CE
+- Docker Buildx
+- Docker Compose plugin (`docker compose`)
 
 Also:
 
-* Enables Docker service
-* Starts Docker automatically on boot
+- Enables Docker service
+- Starts Docker automatically on boot
+- Works whether the `docker` group already existed or not
+
+After installing Docker, log in again as your target user so Docker group membership is applied to the shell session.
 
 ---
 
-### 4) Install PHP (choose version)
+### 5) Install PHP (choose version)
 
-* Prompts for PHP version (examples: `8.1`, `8.2`, `8.3`)
-* Installs common extensions used in Laravel and modern PHP stacks
+- Prompts for PHP version (examples: `8.1`, `8.2`, `8.3`)
+- Installs common extensions used in Laravel and modern PHP stacks
 
 ---
 
-### 5) Install Composer
+### 6) Install Composer
 
-* Installs Composer globally at:
+- Installs Composer globally at:
 
-```
+```text
 /usr/local/bin/composer
 ```
 
-* Optionally updates Composer if already installed
+- Optionally updates Composer if already installed
 
 ---
 
-### 6) Install Node.js + NPM (choose version)
+### 7) Install Node.js + NPM (choose version)
 
-* Prompts for Node major version (examples: `18`, `20`, `22`)
-* Installs via NodeSource
-* Includes `npm`
+- Prompts for Node major version (examples: `18`, `20`, `22`)
+- Installs via NodeSource
+- Includes `npm`
 
 ---
 
-### 7) Check open ports + close with UFW
+### 8) Check open ports + close with UFW
 
-* Lists listening ports using `ss -tulpn`
-* Displays current UFW status
-* Optionally enables UFW
-* Allows closing a specific port using:
-
-  * TCP
-  * UDP
-  * Both
+- Lists listening ports using `ss -tulpn`
+- Displays current UFW status
+- Optionally enables UFW
+- Allows closing a specific port using:
+  - TCP
+  - UDP
+  - Both
 
 ---
 
 ## Usage Notes (Important)
 
-* Always run the toolbox using:
+- Always run the toolbox using:
 
 ```bash
 sudo ./devops.sh
 ```
 
-* Some modules add official repositories:
+- On a brand-new server, a practical flow is:
 
-  * Docker
-  * NodeSource
-  * `ondrej/php` PPA
-* On production servers, be careful when enabling UFW or blocking ports.
+```bash
+sudo ./devops.sh
+# 1) create devops user
+# 3) update system
+# 4) install Docker
+```
+
+- Some modules add official repositories:
+  - Docker
+  - NodeSource
+  - `ondrej/php` PPA
+- On production servers, be careful when enabling UFW or blocking ports.
 
 ---
 
 ## Suggested VPS Baseline Workflow
 
-1. **GitHub SSH setup**
+1. **Create/update DevOps user**
 2. **System update**
 3. **Install Docker**
-4. **Install PHP + Composer** (if needed)
-5. **Install Node/NPM** (if needed)
-6. **Review ports and enable firewall**
+4. **Log in again as `devops`**
+5. **GitHub SSH setup**
+6. **Install PHP + Composer** (if needed)
+7. **Install Node/NPM** (if needed)
+8. **Review ports and enable firewall**
 
 ---
 
@@ -231,9 +254,9 @@ Pull requests are welcome.
 
 Guidelines:
 
-* Add new features as standalone modules in `modules/`
-* Keep modules small and single-purpose
-* Reuse helpers from `lib/common.sh`
+- Add new features as standalone modules in `modules/`
+- Keep modules small and single-purpose
+- Reuse helpers from `lib/common.sh`
 
 ---
 
