@@ -31,6 +31,7 @@ while true; do
   echo "6) Install Composer"
   echo "7) Install Node.js + NPM (choose version)"
   echo "8) Check open ports + close with UFW"
+  echo "9) Disable native Apache/Nginx services"
   echo "0) Exit"
   echo
 
@@ -45,6 +46,7 @@ while true; do
     6) run_module "05_composer.sh"; pause ;;
     7) run_module "06_node.sh"; pause ;;
     8) run_module "07_ports.sh"; pause ;;
+    9) run_module "08_disable_native_webservers.sh"; pause ;;
     0) exit 0 ;;
     *) echo "Invalid option"; pause ;;
   esac

@@ -3,6 +3,7 @@ set -euo pipefail
 
 OS_NAME="unknown"
 OS_VERSION="unknown"
+OS_CODENAME="unknown"
 
 require_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
@@ -23,9 +24,11 @@ detect_os() {
     # ID costuma ser "ubuntu" / "debian" (ótimo pra lógica)
     OS_NAME="${ID:-${NAME:-unknown}}"
     OS_VERSION="${VERSION_ID:-unknown}"
+    OS_CODENAME="${VERSION_CODENAME:-unknown}"
 
     # normaliza pra minúsculo (evita esses bugs pra sempre)
     OS_NAME="$(echo "${OS_NAME}" | tr '[:upper:]' '[:lower:]')"
+    OS_CODENAME="$(echo "${OS_CODENAME}" | tr '[:upper:]' '[:lower:]')"
   fi
 }
 

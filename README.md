@@ -14,6 +14,7 @@ Main features:
 - Composer
 - Node.js & NPM (choose version)
 - Open ports inspection and firewall management (UFW)
+- Disable native Apache/Nginx services before using Traefik or another reverse proxy
 
 ---
 
@@ -33,7 +34,8 @@ sh-automation-devops/
     ├── 04_php.sh
     ├── 05_composer.sh
     ├── 06_node.sh
-    └── 07_ports.sh
+    ├── 07_ports.sh
+    └── 08_disable_native_webservers.sh
 ```
 
 ---
@@ -157,8 +159,29 @@ After installing Docker, log in again as your target user so Docker group member
 
 ### 5) Install PHP (choose version)
 
-- Prompts for PHP version (examples: `8.1`, `8.2`, `8.3`)
+- Prompts for PHP version (examples: `8.2`, `8.3`, `8.4`, `8.5`)
 - Installs common extensions used in Laravel and modern PHP stacks
+- On Ubuntu 26.04 (`resolute`), PHP `8.5` is installed from native Ubuntu packages
+- On Ubuntu 26.04 (`resolute`), PHP `8.4` is provided through Docker wrappers because `ppa:ondrej/php` does not publish packages for `resolute`
+
+For Ubuntu 26.04 + PHP 8.4, run Docker first:
+
+```bash
+sudo ./devops.sh
+# 4) Install Docker + Compose plugin
+# 5) Install PHP
+# choose 8.4
+```
+
+This creates:
+
+```text
+/usr/local/bin/php
+/usr/local/bin/php84
+/usr/local/bin/composer
+```
+
+Those commands run `php:8.4-cli` and `composer:2` containers mounting the current directory at `/app`.
 
 ---
 
@@ -194,6 +217,19 @@ After installing Docker, log in again as your target user so Docker group member
 
 ---
 
+### 9) Disable native Apache/Nginx services
+
+- Stops native VPS services:
+  - `apache2`
+  - `nginx`
+- Disables them on boot with `systemctl disable`
+- Optionally masks each service to prevent accidental restarts
+- Shows what is still listening on ports `80` and `443`
+
+Useful before running Traefik, Caddy, Nginx Proxy Manager or another Docker reverse proxy that needs ports `80` and `443`.
+
+---
+
 ## Usage Notes (Important)
 
 - Always run the toolbox using:
@@ -214,7 +250,11 @@ sudo ./devops.sh
 - Some modules add official repositories:
   - Docker
   - NodeSource
-  - `ondrej/php` PPA
+  - `ondrej/php` PPA on supported Ubuntu releases
+  - Sury PHP repository on Debian
+- Ubuntu 26.04 (`resolute`) is treated specially:
+  - PHP `8.5` uses native Ubuntu packages
+  - PHP `8.4` uses Docker wrappers and does not add `ondrej/php`
 - On production servers, be careful when enabling UFW or blocking ports.
 
 ---
