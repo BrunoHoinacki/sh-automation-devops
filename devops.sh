@@ -32,6 +32,7 @@ while true; do
   echo "7) Install Node.js + NPM (choose version)"
   echo "8) Check open ports + close with UFW"
   echo "9) Disable native Apache/Nginx services"
+  echo "10) Security hardening (fail2ban, UFW, SSH, auto-updates)"
   echo "0) Exit"
   echo
 
@@ -47,6 +48,7 @@ while true; do
     7) run_module "06_node.sh"; pause ;;
     8) run_module "07_ports.sh"; pause ;;
     9) run_module "08_disable_native_webservers.sh"; pause ;;
+    10) run_module "09_security_hardening.sh"; pause ;;
     0) exit 0 ;;
     *) echo "Invalid option"; pause ;;
   esac

@@ -45,7 +45,7 @@ case "${PROTO}" in
     ;;
   *)
     echo "Invalid protocol. Using tcp."
-    ufw deny "${PORT}/tcp}"
+    ufw deny "${PORT}/tcp"
     ;;
 esac
 

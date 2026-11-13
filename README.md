@@ -15,6 +15,7 @@ Main features:
 - Node.js & NPM (choose version)
 - Open ports inspection and firewall management (UFW)
 - Disable native Apache/Nginx services before using Traefik or another reverse proxy
+- Security hardening: fail2ban, UFW, SSH hardening, unattended upgrades, sysctl
 
 ---
 
@@ -35,7 +36,8 @@ sh-automation-devops/
     ├── 05_composer.sh
     ├── 06_node.sh
     ├── 07_ports.sh
-    └── 08_disable_native_webservers.sh
+    ├── 08_disable_native_webservers.sh
+    └── 09_security_hardening.sh
 ```
 
 ---
@@ -230,6 +232,32 @@ Useful before running Traefik, Caddy, Nginx Proxy Manager or another Docker reve
 
 ---
 
+### 10) Security hardening (fail2ban, UFW, SSH, auto-updates)
+
+- Installs and enables **fail2ban** (`systemd` backend, bans via UFW):
+  - `sshd` jail (aggressive mode, 4 attempts, incremental ban time up to 1 week)
+  - `recidive` jail (repeat offenders banned for 1 week)
+  - Optional whitelist of trusted IPs/CIDRs
+- Enables **UFW** with `deny incoming` / `allow outgoing`, rate-limited SSH on the detected port and optional `80/443`
+- Enables **unattended security upgrades** (no automatic reboot)
+- Applies **sysctl hardening** (`/etc/sysctl.d/99-devops-hardening.conf`), keeping `ip_forward` untouched for Docker
+- Hardens **SSH** via `/etc/ssh/sshd_config.d/99-devops-hardening.conf`:
+  - `MaxAuthTries`, `LoginGraceTime`, `X11Forwarding no`, idle timeout
+  - Disables password login and sets `PermitRootLogin prohibit-password` **only if** `authorized_keys` exists for root or a sudo user and you confirm
+  - Validates with `sshd -t` before reloading (reverts on error)
+
+Useful commands:
+
+```bash
+sudo fail2ban-client status sshd
+sudo fail2ban-client set sshd unbanip <IP>
+```
+
+> Keep your current session open and test a new SSH login before disconnecting.
+> Ports published by Docker (`-p`) bypass UFW; bind internal services to `127.0.0.1`.
+
+---
+
 ## Usage Notes (Important)
 
 - Always run the toolbox using:
@@ -269,6 +297,7 @@ sudo ./devops.sh
 6. **Install PHP + Composer** (if needed)
 7. **Install Node/NPM** (if needed)
 8. **Review ports and enable firewall**
+9. **Security hardening** (fail2ban, UFW, SSH, auto-updates)
 
 ---
 
