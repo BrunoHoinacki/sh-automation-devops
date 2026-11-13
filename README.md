@@ -108,6 +108,7 @@ curl -fsSL https://raw.githubusercontent.com/BrunoHoinacki/sh-automation-devops/
 - Creates the Linux user (default: `devops`) if it does not exist
 - Adds the user to `sudo`
 - Adds the user to `docker`
+- Asks for the user password (required for `sudo`) if none is set, or offers to change it
 - Creates the `docker` group if Docker has not been installed yet
 - Can also be used later to re-apply group membership
 
