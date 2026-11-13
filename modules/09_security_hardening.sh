@@ -19,14 +19,6 @@ ssh_service_name() {
   fi
 }
 
-detect_ssh_port() {
-  local port=""
-  if command_exists sshd; then
-    port="$(sshd -T 2>/dev/null | awk '/^port /{print $2; exit}')"
-  fi
-  echo "${port:-22}"
-}
-
 # Returns 0 if root or any sudo user has a non-empty authorized_keys file
 has_authorized_keys() {
   local user home

@@ -19,9 +19,18 @@ echo "UFW status:"
 ufw status verbose || true
 echo
 
+SSH_PORT="$(detect_ssh_port)"
+
 if ! confirm "Do you want to enable UFW now?"; then
   echo "Skipping UFW enable."
 else
+  # Always allow SSH BEFORE enabling, otherwise default 'deny incoming' locks us out
+  echo "==> Allowing SSH on port ${SSH_PORT}/tcp before enabling UFW"
+  ufw allow "${SSH_PORT}/tcp" comment 'SSH'
+  if confirm "Allow HTTP/HTTPS (80, 443)?"; then
+    ufw allow 80/tcp comment 'HTTP'
+    ufw allow 443/tcp comment 'HTTPS'
+  fi
   ufw --force enable
 fi
 
@@ -30,6 +39,11 @@ read -rp "Enter a port number to BLOCK (ex: 80) or press ENTER to skip: " PORT
 if [[ -z "${PORT}" ]]; then
   echo "No port selected."
   exit 0
+fi
+
+if [[ "${PORT}" == "${SSH_PORT}" ]]; then
+  echo "❌ Refusing to block the SSH port (${SSH_PORT}) — you would lose access."
+  exit 1
 fi
 
 read -rp "Protocol [tcp/udp/both] (default tcp): " PROTO
